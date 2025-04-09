@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqua Daily Shop</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .status-container {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            margin: 20px auto;
+            color: white;
+            position: relative;
+        }
+        .status-container h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .status-message {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00cc00;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .last-checked {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 10px;
+        }
+        .refresh-icon {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: #1e90ff;
+        }
+        .refresh-icon:hover {
+            color: #1c86ee;
+        }
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .shop-item {
+            text-align: center;
+        }
+        .shop-item img {
+            width: 100%;
+            height: auto;
+            max-width: 200px;
+        }
+        .item-name {
+            margin-top: 10px;
+            font-size: 16px;
+            color: white;
+        }
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+        #shop h1, #shop h2 {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: popUp 0.5s ease forwards;
+        }
+        #shop h2 {
+            animation-delay: 0.2s;
+        }
+        @keyframes popUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="Infinity_1__42_-removebg-preview.png" alt="Site Logo">
+        </div>
+        <nav class="tabs">
+            <button class="tab-button active" onclick="openTab('shop')">Shop</button>
+            <button class="tab-button" onclick="openTab('status')">Status</button>
+            <button class="tab-button" onclick="openTab('news')">News</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="shop" class="tab-content active">
+            <h1>Aqua Daily Shop</h1>
+            <h2>Featured Items</h2>
+            <div class="shop-items"></div>
+        </div>
+
+        <div id="status" class="tab-content">
+            <div class="status-container">
+                <h2>Aqua Status</h2>
+                <svg class="refresh-icon" onclick="refreshStatus()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 4"></path>
+                    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 20"></path>
+                </svg>
+                <div class="status-message">
+                    <span class="status-dot"></span>
+                    <span>Aqua is up!</span>
+                </div>
+                <div class="last-checked" id="last-checked">Last checked: Loading...</div>
+            </div>
+        </div>
+
+        <div id="news" class="tab-content">
+            <h2>Latest News</h2>
+            <div class="news-box">
+                <img src="Untitled design (79).png" alt="News Image">
+                <h3>Aqua Release</h3>
+                <p>Aqua chapter 2 season 3 is here!</p>
+            </div>
+        </div>
+    </div>
+
+    <img src="OIP__3_-removebg-preview.png" alt="Running Duck" class="duck" id="duck">
+    <canvas id="backgroundCanvas"></canvas>
+
+    <script>
+        let shopItems = [];
+        const API_URL = 'https://fortnite-api.com/v2/cosmetics/br';
+
+        async function fetchShopItems() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (data.status === 200 && Array.isArray(data.data)) {
+                    // Filter items from Chapter 1 Season 10 to Chapter 2 Season 3
+                    const earlyItems = data.data.filter(item => {
+                        if (!item.introduction) return false;
+                        const chapter = parseInt(item.introduction.chapter);
+                        const season = parseInt(item.introduction.season);
+                        return (chapter === 1 && season >= 10) || 
+                               (chapter === 2 && season <= 3);
+                    });
+
+                    // Separate items by type
+                    const skins = earlyItems.filter(item => item.type.value === 'outfit');
+                    const gliders = earlyItems.filter(item => item.type.value === 'glider');
+                    const pickaxes = earlyItems.filter(item => item.type.value === 'pickaxe');
+                    const emotes = earlyItems.filter(item => item.type.value === 'emote');
+
+                    // Get current day index (changes every 24 hours)
+                    const now = new Date();
+                    const dayIndex = Math.floor(now.getTime() / (1000 * 60 * 60 * 24));
+
+                    // Function to get items based on day index
+                    function getDailyItems(itemsArray, count) {
+                        const startIndex = (dayIndex * count) % itemsArray.length;
+                        const result = [];
+                        for (let i = 0; i < count; i++) {
+                            const index = (startIndex + i) % itemsArray.length;
+                            result.push(itemsArray[index]);
+                        }
+                        return result;
+                    }
+
+                    // Select specific numbers of each item type
+                    const selectedSkins = getDailyItems(skins, 4);
+                    const selectedGliders = getDailyItems(gliders, 2);
+                    const selectedPickaxes = getDailyItems(pickaxes, 2);
+                    const selectedEmotes = getDailyItems(emotes, 2);
+
+                    // Combine all selected items
+                    const selectedItems = [
+                        ...selectedSkins,
+                        ...selectedGliders,
+                        ...selectedPickaxes,
+                        ...selectedEmotes
+                    ];
+
+                    shopItems = selectedItems.map(item => ({
+                        name: item.name || "Unnamed Item",
+                        image: item.images?.icon || item.images?.smallIcon || "https://via.placeholder.com/150"
+                    }));
+
+                    displayShopItems();
+                } else {
+                    console.error ('Unexpected API response format:', data);
+                    shopItems = [{ name: "Error", image: "https://via.placeholder.com/150" }];
+                    displayShopItems();
+                }
+            } catch (error) {
+                console.error('Error fetching shop items:', error);
+                shopItems = [{ name: "Error", image: "https://via.placeholder.com/150" }];
+                displayShopItems();
+            }
+        }
+
+        function displayShopItems() {
+            const shopContainer = document.querySelector('.shop-items');
+            shopContainer.innerHTML = '';
+            shopItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'shop-item';
+                itemDiv.innerHTML = `
+                    <img src="${item.image}" alt="${item.name} Image">
+                    <div class="item-name">${item.name}</div>
+                `;
+                shopContainer.appendChild(itemDiv);
+            });
+        }
+
+        // Auto-refresh every 24 hours
+        function scheduleDailyRefresh() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const timeUntilMidnight = tomorrow - now;
+            
+            setTimeout(() => {
+                fetchShopItems();
+                setInterval(fetchShopItems, 24 * 60 * 60 * 1000); // Refresh every 24 hours
+            }, timeUntilMidnight);
+        }
+
+        function updateLastChecked() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+            document.getElementById('last-checked').textContent = `Last checked: ${timeString}`;
+        }
+
+        function refreshStatus() {
+            updateLastChecked();
+        }
+
+        function openTab(tabName) {
+            let contents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < contents.length; i++) contents[i].classList.remove('active');
+
+            let buttons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove('active');
+
+            const targetTab = document.getElementById(tabName);
+            targetTab.classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (tabName === 'shop') {
+                const h1 = targetTab.querySelector('h1');
+                const h2 = targetTab.querySelector('h2');
+                h1.style.animation = 'none';
+                h2.style.animation = 'none';
+                setTimeout(() => {
+                    h1.style.animation = 'popUp 0.5s ease forwards';
+                    h2.style.animation = 'popUp 0.5s ease forwards 0.2s';
+                }, 10);
+                fetchShopItems();
+            } else if (tabName === 'status') {
+                updateLastChecked();
+            }
+        }
+
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let snowflakes = [];
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.radius = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > canvas.height) {
+                    this.y = 0;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        let fallingDucks = [];
+        const duckImage = new Image();
+        duckImage.src = 'maxresdefault__1_-removebg-preview.png';
+
+        class FallingDuck {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -50;
+                this.speed = Math.random() * 2 + 1;
+                this.opacity = 1;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 2 - 1;
+                this.size = 50;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                ctx.drawImage(duckImage, -this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+            update() {
+                this.y += this.speed;
+                this.rotation += this.rotationSpeed;
+                this.opacity = 1 - this.y / canvas.height;
+                if (this.y > canvas.height) {
+                    this.y = -50;
+                    this.x = Math.random() * canvas.width;
+                    this.opacity = 1;
+                    this.speed = Math.random() * 2 + 1;
+                    this.rotation = Math.random() * 360;
+                }
+            }
+        }
+
+        function createBackgroundElements() {
+            for (let i = 0; i < 100; i++) snowflakes.push(new Snowflake());
+            for (let i = 0; i < 10; i++) fallingDucks.push(new FallingDuck());
+        }
+
+        function animateBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            snowflakes.forEach(snowflake => { snowflake.update(); snowflake.draw(); });
+            fallingDucks.forEach(duck => { duck.update(); duck.draw(); });
+            requestAnimationFrame(animateBackground);
+        }
+
+        const runningDuck = document.getElementById('duck');
+        let duckX = 0;
+        let duckSpeed = 2;
+
+        function animateRunningDuck() {
+            duckX += duckSpeed;
+            if (duckX > window.innerWidth - 50 || duckX < 0) {
+                duckSpeed = -duckSpeed;
+                runningDuck.style.transform = duckSpeed > 0 ? 'scaleX(1)' : 'scaleX(-1)';
+            }
+            runningDuck.style.left = duckX + 'px';
+            requestAnimationFrame(animateRunningDuck);
+        }
+
+        fetchShopItems();
+        scheduleDailyRefresh();
+        updateLastChecked();
+        createBackgroundElements();
+        animateBackground();
+        animateRunningDuck();
+    </script>
+</body>
+</html>

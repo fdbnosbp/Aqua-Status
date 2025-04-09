@@ -1,0 +1,197 @@
+/* styles.css */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: black;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    color: white;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.tabs {
+    display: flex;
+    gap: 20px;
+}
+
+.tab-button {
+    padding: 5px 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    transition: all 0.3s;
+}
+
+.tab-button:hover {
+    color: #2196F3;
+}
+
+.tab-button.active {
+    color: #2196F3;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+h1 {
+    font-size: 48px;
+    margin: 20px 0;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Shop Styles */
+h2 {
+    text-align: left;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.shop-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    text-align: left;
+}
+
+.shop-item {
+    background: linear-gradient(to bottom, #3a2b58, #1a1a1a);
+    border-radius: 10px;
+    overflow: hidden;
+    color: white;
+    position: relative;
+}
+
+.shop-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.item-type {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.item-name {
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.item-price {
+    padding: 0 10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 16px;
+}
+
+.currency-icon {
+    font-size: 20px;
+}
+
+/* Status Styles */
+.status-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.status-dot {
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: blink 2s infinite;
+}
+
+.status-text {
+    font-size: 18px;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* News Styles */
+.news-box {
+    background: linear-gradient(to bottom, #3a2b58, #1a1a1a);
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.news-box img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.news-box h3 {
+    margin: 10px 0;
+}
+
+.news-box p {
+    line-height: 1.6;
+}
+
+/* Background Canvas (Snow and Ducks) */
+#backgroundCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Running Duck Styles */
+.duck {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    width: 50px;
+    height: 50px;
+    z-index: 3;
+    transition: transform 0.1s;
+}
